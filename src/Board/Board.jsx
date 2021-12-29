@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState, useRef} from 'react';
 import {
   randomIntFromInterval,
   reverseLinkedList,
@@ -87,22 +87,62 @@ const Board = () => {
     return board;
   };
 
+  let counter = useRef(44);
+  let historyKey = useRef(39);
+
   const [board, setBoard] = useState(createBoard(BOARD_SIZE));
   const [snakeCells, setSnakeCells] = useState(new Set([POSITION]));
   const [snake, setSnake] = useState(new SinglyLinkedList(44));
   const [position, setPosition] = useState(45);
   const [IsALive, setALive] = useState(true);
   const [keyCode, setKeyCode] = useState(null);
+  const [changeDirect, setChangeDirect] = useState(1);
 
+  const step = {
+    37: -1,
+    38: -10,
+    39: 1,
+    40: 10
+  };
+  
   const move = () => {
-    setPosition(position + 1);
+  // left   = 37
+  // up     = 38
+  // right  = 39
+  // down   = 40
     console.log(keyCode);
+    //check exception: if snake is going up, it cannot go down. And if snake is going left, it cannot go right
+    if((keyCode == 38 && historyKey.current == 40) ||
+    (keyCode == 40 && historyKey.current == 38) ||
+    (keyCode == 37 && historyKey.current == 39) ||
+    (keyCode == 39 && historyKey.current == 37)) {
+      counter.current = counter.current + step[historyKey.current];
+      setKeyCode(historyKey.current);
+      return setSnakeCells(previousState => new Set([counter.current]));
+    }
     //check keyCode
-    if()
-    if(snakeCells.has(50)) {
-      setALive(false);
+    if(keyCode) {
+      historyKey.current = keyCode ? keyCode : historyKey.current;
+      counter.current = counter.current + step[historyKey.current];
+      console.log(historyKey.current);
+      console.log(counter.current);
+      console.log("---------------");
+      
+      if(historyKey.current == 39 && counter.current % 10 == 1) {
+        alert("Game over!");
+      }
+      return setSnakeCells(previousState => new Set([counter.current]));
     } else {
-      return setSnakeCells(previousState => new Set([position]));
+      counter.current++;
+      if(historyKey.current == 39 && counter.current % 10 == 1) {
+        // if (confirm("Game Over! Restart???") == true) {
+        //   counter.current = 44;
+        //   return setSnakeCells(previousState => new Set([counter.current]));
+        // } else {
+        //   setALive(false);
+        // }
+      }
+      return setSnakeCells(previousState => new Set([counter.current]));
     }
   }
 
@@ -111,11 +151,8 @@ const Board = () => {
     move(setSnakeCells, position, setPosition, setALive, snakeCells);
   }, IsALive ? 500 : null);
 
-  // left   = 37
-  // up     = 38
-  // right  = 39
-  // down   = 40
   const handleUserKeyPress = event => {
+    console.log('handleUserKeyPress');
     setKeyCode(event.keyCode);
   };
 
@@ -127,6 +164,9 @@ const Board = () => {
     };
   }, []);
 
+  useEffect(() => {
+    console.log('ggg');
+  }, [move]);
 
 //k:107 j:106 l:108 i:105
   return(
